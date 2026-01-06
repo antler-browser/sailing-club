@@ -185,6 +185,50 @@ That's it! The simulator will:
 - Click "Open as X" to open a new tab and simulate multiple users
 - Load a profile from the URL parameter `?irlProfile=<id>`
 
+### Database Queries (for admins)
+
+Use the Wrangler CLI to run SQL queries against D1 databases.
+
+**Development (Local D1):**
+```bash
+pnpm wrangler d1 execute meetup-cloudflare-dev-db --local --command "SELECT * FROM users;"
+```
+
+**Production (Remote D1):**
+
+Use the Cloudflare CLI to find the database name and run queries.
+```bash
+# Find the database name (format: meetup-irl-<stage>-db)
+pnpm wrangler d1 list
+
+# Run a query
+pnpm wrangler d1 execute meetup-irl-prod-db --remote --command "SELECT * FROM users;"
+```
+
+Or log in to the Cloudflare dashboard, go to the D1 database, and run SQL queries directly.
+
+### Admin Setup
+
+Admin status is stored in the D1 database (`is_admin` column in the `users` table). To make a user an admin, they must first check in to the meetup, then update their status using SQL.
+
+**Development (Local D1):**
+```bash
+# Set user as admin by DID
+pnpm wrangler d1 execute meetup-cloudflare-dev-db --local --command "UPDATE users SET is_admin = 1 WHERE did = 'did:key:z...';"
+```
+
+**Production (Remote D1):**
+```bash
+# Set user as admin by DID
+pnpm wrangler d1 execute meetup-irl-prod-db --remote --command "UPDATE users SET is_admin = 1 WHERE did = 'did:key:z...';"
+```
+
+Or log in to the Cloudflare dashboard, go to the D1 database, and run the SQL query.
+
+```sql
+UPDATE users SET is_admin = 1 WHERE did = 'did:key:z...';
+```
+
 ## Third Party Libraries
 
 ### Client
