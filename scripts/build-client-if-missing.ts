@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /**
  * Ensures client/dist/ exists before starting dev server
  * Builds client on first run to prevent Wrangler errors
@@ -20,8 +19,8 @@ if (!existsSync(clientDistPath)) {
   try {
     execSync('pnpm run build:client', { cwd: rootDir, stdio: 'inherit' })
     console.log('✅ Client built successfully\n')
-  } catch (error) {
-    console.error('❌ Failed to build client:', error.message)
+  } catch (error: unknown) {
+    console.error('❌ Failed to build client:', (error as Error).message)
     process.exit(1)
   }
 } else {

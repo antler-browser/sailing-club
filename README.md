@@ -1,74 +1,62 @@
-# IRL Browser Starter
+# Mini App Starter
 
-A starter template for building IRL Browser mini apps with Cloudflare Workers, D1, and Durable Objects.
+## Idea behind this starter template
 
-## Features
+In the future, a lot more of the apps we use will be built by our friends. This repo is a starter template to help you easily build and deploy mini apps for you and your friends.
 
-- **User Authentication** - JWT-verified profiles from IRL Browser
-- **Real-time Updates** - WebSocket broadcasting via Durable Objects
-- **SQLite Database** - Cloudflare D1 with Drizzle ORM
-- **Mobile-first UI** - React + Tailwind CSS
+### Key Benefits
+- **Signup/Login built-in** - You don't have to write any auth code. 
+- **Simple full-stack app ready to go** - REST API, SQLite database, and real-time updates via WebSocket, are already set up, so you can focus on building your app.
+- **Examples** - We provide examples of mini apps that you can use as a reference, so you don't have to start from scratch. See [`docs/mini-app-examples.md`](./docs/mini-app-examples.md).
+- **Free Hosting** - Easily deploy to Cloudflare. We use Cloudflare because their free tier is more than enough for multiple mini apps.
 
-## Quick Start
+## Getting Started
 
+### 1. Get a visual mockup of the app you want to build.
+
+For example, open up [claude.ai](https://claude.ai) and use the **frontend-design skill** to create a visual mockup of the app you want to build.
+
+Here is an example prompt for creating a scavenger hunt mini app for my coworking space:
+```
+Use the frontend design skill, I want to create a scavenger hunt mini app. This is for my coworking space, all 16 members will be given a QR code and asked to hide it somewhere in the space. We should show a leaderboard that displays everyone that has found a QR code. Our goal with the app is to have people at the coworking space have fun by looking around to find the hidden QR codes. 
+
+Focus on the UI/visual design, not the app logic. Focus on mobile-first design. Use placeholder data, mock profiles and avatars and mock states if needed. Skip signup/auth screens entirely. Skip QR scanning screens, we are going to use native camera app. 
+
+Before designing, ask me questions to clarify what I want to build.
+```
+
+### 2. Clone this repo, and install dependencies.
 ```bash
-pnpm install              # Install dependencies
-pnpm db:migrate:dev       # Initialize local D1 database
-pnpm run dev              # Start development server
+git clone https://github.com/antler-browser/mini-app-starter.git
+cd mini-app-starter        # or your own app name
+pnpm install               # Install dependencies
 ```
 
-Open `http://localhost:5173` in your browser. The IRL Browser Simulator will auto-login with a test profile.
+This project uses pnpm as the package manager, if you don't have it installed, you can install it with `brew install pnpm`.
 
-## Project Structure
+### 3. Create a technical implementation of your app based on the mockup.
 
-This is a pnpm workspace monorepo with three packages:
-- `client/` - React frontend
-- `server/` - Cloudflare Workers, D1 (SQLite), Durable Objects
-- `shared/` - JWT verification utilities
+Open up Claude Code or a similar tool to create a technical implementation. Here is an example prompt for creating a technical implementation of the scavenger hunt mini app:
+```
+Use this mockup as a reference:
 
-## Building Your App
+Look up examples to see if you can learn anything from them.
 
-1. **Add tables** to `/server/src/db/schema.ts` alongside the existing `users` table
-2. **Generate migrations**: `pnpm db:generate`
-3. **Apply migrations**: `pnpm db:migrate:dev`
-4. **Add API endpoints** in `/server/src/index.ts` with JWT verification
-5. **Build UI components** in `/client/src/components/`
-6. **Wire up WebSocket events** for real-time updates
-
-Use the `/irl-browser` Claude Code command for guided scaffolding.
-
-## Debugging with IRL Browser Simulator
-
-**Note:** The IRL Browser Simulator is a development-only tool. Never use in production.
-
-The simulator automatically injects the `window.irlBrowser` API in development mode:
-
-```typescript
-if (import.meta.env.DEV) {
-  const simulator = await import('irl-browser-simulator')
-  simulator.enableIrlBrowserSimulator()
-}
+Admin features to set up the app, and the ability to reset the app.
 ```
 
-**Features:**
-- Auto-loads test profile (Paul Morphy)
-- Floating debug panel
-- Click "Open as X" to simulate multiple users in separate tabs
-- Load profiles via URL: `?irlProfile=<id>`
+### 4. Test your app locally.
+```bash
+pnpm db:run-migrations    # Initialize / run migrations on local D1 database
+pnpm dev                  # Start development server
+pnpm dev:simulator        # or start development server with a test user account
+```
 
-## Deployment
+### 5. Deploy your app to Cloudflare.
 
-This app deploys entirely to Cloudflare using:
-- **Cloudflare Workers** for API routes
-- **Cloudflare D1** for SQLite database
-- **Cloudflare Durable Objects** for WebSocket broadcasting
-- **Alchemy SDK** for infrastructure-as-code
+We use the Alchemy to easily deploy to Cloudflare. If you don't have it installed, you can install it with `brew install alchemy`.
 
-> **Prerequisites:**
-- Cloudflare account (free tier works!)
-- Alchemy CLI installed (`brew install alchemy`)
-
-Configure Cloudflare API token in Alchemy (see [Alchemy CLI Documentation](https://alchemy.run/docs/cli/configuration)):
+Configure a Cloudflare API token to use with Alchemy (see [Alchemy CLI Documentation](https://alchemy.run/docs/cli/configuration)):
 ```bash
 alchemy configure
 ```
@@ -80,15 +68,17 @@ To deploy the app:
 pnpm run deploy:cloudflare
 ```
 
-## API Endpoints
+Yay! You've deployed your app. If you ran into any issues or have any feedback, create an issue in this repo so we understand what we can improve. Thanks!
 
-- `POST /api/add-user` - Add or update user profile (requires JWT)
-- `POST /api/add-avatar` - Add or update user avatar (requires JWT)
-- `DELETE /api/remove-user` - Remove user (requires JWT)
-- `GET /api/users` - Get all users (public)
-- `GET /api/ws` - WebSocket connection for real-time updates
+## Project Structure
+
+This is a monorepo with three packages:
+- `client/` - React frontend
+- `server/` - Cloudflare Workers, D1 (SQLite), Durable Objects
+- `shared/` - Shared utilities (JWT verification)
 
 ## Documentation
 
 - [CLAUDE.md](./CLAUDE.md) - Development guide for Claude Code
-- [IRL Browser Specification](./docs/irl-browser-specification.md) - IRL Browser API reference
+- [Local First Auth Specification](./docs/local-first-auth-spec.md) - Local First Auth Specification used for authentication
+- [Mini App Examples](./docs/mini-app-examples.md) - Examples of mini apps that you can use as a reference

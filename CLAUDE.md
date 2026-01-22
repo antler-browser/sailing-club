@@ -1,30 +1,46 @@
-# CLAUDE.md for Local First Auth Starter
+# CLAUDE.md for Mini App Starter
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
 
-A starter template for building Local First Auth mini apps with Cloudflare Workers, D1, and Durable Objects. Uses `window.localFirstAuth` API for profile access with JWT verification. Mini apps run inside a Local First Auth-enabled app like Antler. See `/docs/local-first-auth-spec.md` for Local First Auth Specification.
+A starter template for building mini apps for you and your friends. Uses Local First Auth spec for user signup and authentication, SQLite database, WebSocket for real-time updates, REST API for backend endpoints.
 
-**Project Structure**: This is a pnpm workspace monorepo with three packages:
-- `client/` - React frontend
-- `server/` - Cloudflare Workers, D1 (SQLite), Durable Objects
-- `shared/` - Shared utilities (JWT verification)
+### Project Structure
 
-## Key Files and Directories
+This is a pnpm workspace monorepo with three packages:
 
-### Client (`/client/`)
-- `/client/src/components/`: React components
-  - `/QRCodePanel.tsx` - Shows a QR code for app. Hidden on mobile, visible on desktop.
-  - `/Avatar.tsx` - Displays a user's avatar or placeholder if no avatar is set.
-- `/client/src/app.tsx` - Main component with Local First Auth integration and profile display
-- `/client/src/main.tsx` - Entry point that renders App (initializes Local First Auth Simulator in dev mode)
-- `/client/public/`: Public files
-  - `local-first-auth-manifest.json` - Mini app Local First Auth manifest with metadata and requested permissions
+| Package | Description |
+|---------|-------------|
+| `client/` | React frontend |
+| `server/` | Cloudflare Workers, D1 (SQLite), Durable Objects (WebSocket) |
+| `shared/` | Shared utilities (JWT verification) |
+
+### Key Files
+
+#### Client (`/client/`)
+
+- `/client/src/components/` - React components
+  - `QRCodePanel.tsx` - QR code for app (hidden on mobile, visible on desktop)
+  - `Avatar.tsx` - User avatar or placeholder
+  - `AdminSection.tsx` - Admin-only controls for resetting the event
+  - `Footer.tsx` - Footer with attribution link
+- `/client/src/hooks/` - React hooks
+  - `useLocalFirstAuth.tsx` - Authentication state management, exports `AuthProvider` and `useLocalFirstAuth()` hook
+  - `useWebSockets.ts` - WebSocket connection hook for real-time updates
+- `/client/src/routes/` - Route components
+  - `index.tsx` - React Router root route
+  - `home.tsx` - Home page
+  - `not-found.tsx` - 404 page
+- `/client/src/app.tsx` - Main component with React Router and Local First Auth integration
+- `/client/src/main.tsx` - Entry point (initializes Local First Auth Simulator when `VITE_ENABLE_LOCAL_FIRST_AUTH_SIMULATOR=true`)
+- `/client/public/` - Public files
+  - `local-first-auth-manifest.json` - Mini app manifest with metadata and requested permissions
   - `icon.webp` - Mini app icon
 - `/client/vite.config.ts` - Vite configuration with proxy to backend
 
-### Server (`/server/`)
+#### Server (`/server/`)
+
 - `/server/src/index.ts` - Cloudflare Workers entry point with Hono router, API endpoints, and WebSocket handling
 - `/server/src/durable-object.ts` - Durable Object class for real-time WebSocket connections (WebSocket message types defined inline)
 - `/server/src/db/client.ts` - Database client factory for Cloudflare D1
@@ -35,92 +51,78 @@ A starter template for building Local First Auth mini apps with Cloudflare Worke
 - `/server/drizzle.config.js` - Drizzle Kit configuration for migrations
 - `/server/src/types.ts` - Type definitions for Cloudflare Workers environment bindings
 
-### Shared (`/shared/`)
+#### Shared (`/shared/`)
+
+- `/shared/src/index.ts` - Main export file for shared utilities
 - `/shared/src/jwt.ts` - JWT decoding and verification utilities (`decodeAndVerifyJWT`, `decodeJWT`)
 
-### Root
-- `/docs/`: Documentation
+#### Root
+
+- `/docs/` - Documentation
   - `local-first-auth-spec.md` - Local First Auth Specification
-- `/scripts/`: Helper scripts
-  - `ensure-client-dist.js` - Ensures client build exists (runs before dev via predev hook)
-  - `migrate-local.ts` - Database migration script for local development
+  - `mini-app-examples.md` - Reference examples and links to other mini apps
+- `/scripts/` - Helper scripts
+  - `build-client-if-missing.ts` - Builds client if dist doesn't exist (runs before dev via predev hook)
+  - `run-dev-migrations.ts` - Database migration script for local development
 - `alchemy.run.ts` - Alchemy deployment configuration for Cloudflare Workers
 - `pnpm-workspace.yaml` - Workspace configuration
 - `.alchemy/state.json` - Tracks your infrastructure (created after first deployment)
 - `wrangler.toml` - Cloudflare configuration (used in development only)
 
-## Development Commands
+---
+
+## Getting Started
+
+### Development Commands
 
 All commands run from the workspace root:
 
 ```bash
 pnpm install              # Install all workspace dependencies
-pnpm run dev              # Start both Wrangler dev server and client in parallel (runs predev hook first)
-pnpm run dev:client       # Start only client dev server
+pnpm run dev              # Start dev server (no simulator)
+pnpm run dev:simulator    # Start dev server with Local First Auth Simulator
+pnpm run dev:client       # Start only client dev server (no simulator)
 pnpm run dev:server       # Start only Wrangler dev server (Cloudflare Workers local mode)
 pnpm run build            # Build shared package, then client
 pnpm run build:client     # Build only client package
-pnpm run deploy:cloudflare  # Deploy to Cloudflare using Alchemy
-pnpm run destroy:cloudflare # Destroy Cloudflare deployment using Alchemy
 ```
 
-### Database Commands
+**Pre-Dev Hook:** The `pnpm run dev` command automatically runs a `predev` hook that executes `build-client-if-missing.ts` to build the client if the dist folder doesn't exist.
+
+**Note:** This is a pnpm workspace. All dependencies are installed at the root level. Shared dependencies (@noble/curves, base58-universal, jwt-decode, drizzle-orm) are hoisted to the workspace root.
+
+---
+
+## Architecture
+
+### Authentication
+
+We use the library `local-first-auth` to easily add auth and a simple onboarding flow to the mini app. It uses the Local First Auth spec to simplify the signing up and onboarding process. 
+
+**How it works:**
+1. User creates a one-time account (no passwords, no email, no signup)
+2. Profile details are stored client-side in the browser's local storage
+3. The `window.localFirstAuth` API is injected into the page
+4. Mini app calls `getProfileDetails()` to access the user's profile details
+
+See `/docs/local-first-auth-spec.md` for the full specification.
+
+#### Local First Auth Simulator
+
+To use a test user account without having to go through the onboarding flow, you can use the Local First Auth Simulator. The simulator injects the `window.localFirstAuth` API into a regular browser, allowing you to test your mini app locally without having to scan a QR code.
 
 ```bash
-pnpm db:generate          # Generate D1 migration files from schema (from /server/)
-pnpm db:migrate:dev       # Run all pending migrations on local D1 database (from root)
-pnpm db:push              # Push schema changes directly without migrations (from /server/)
-pnpm db:studio            # Open Drizzle Studio for database inspection (from /server/)
+pnpm dev:simulator    # Start dev server with simulator enabled (floating debug panel visible)
+pnpm dev              # Start dev server without simulator
 ```
 
-**Migration Workflow:**
-1. **Edit schema** in `/server/src/db/schema.ts`
-2. **Generate migration**: `pnpm db:generate` (uses `drizzle.config.js` to read schema)
-3. **Apply locally**: `pnpm db:migrate:dev` (runs `migrate-local.ts` which uses `getPlatformProxy()`)
-4. **Deploy to production**: `pnpm run deploy:cloudflare` (Alchemy automatically applies migrations via `alchemy.run.ts`)
+**Note:** The simulator is a development-only tool and should never be used in production.
 
-**Note**: For production, Alchemy reads the `migrationsDir` setting and applies any new migrations during deployment.
+#### JWT Verification
 
-### Pre-Dev Hook
-The `pnpm run dev` command automatically runs a `predev` hook that executes `ensure-client-dist.js` to ensure the client build exists before starting the dev servers.
+We use JWT-based authentication to verify the user's profile details.
 
-**Note**: This is a pnpm workspace. All dependencies are installed at the root level. Shared dependencies (@noble/curves, base58-universal, jwt-decode, drizzle-orm) are hoisted to the workspace root.
-
-### API Endpoints
-
-The server exposes the following REST and WebSocket endpoints:
-
-**REST Endpoints:**
-- `POST /api/add-user` - Add or update user profile (requires JWT)
-- `POST /api/add-avatar` - Add or update user avatar (requires JWT)
-- `DELETE /api/remove-user` - Remove user (requires JWT)
-- `GET /api/users` - Get all users from the database (public, no auth required)
-- `GET /api` - Root api endpoint - Used for health check
-
-**WebSocket Endpoint:**
-- `GET /api/ws` - Establish WebSocket connection for real-time updates
-
-### Real-time Architecture
-
-The app uses a **single Durable Object instance** (`idFromName: 'default'`) for WebSocket broadcasting:
-
-1. **Client connects**: WebSocket upgrade request -> Worker -> Durable Object
-2. **User action**: POST endpoint -> Worker verifies JWT -> Saves to D1 -> Notifies DO
-3. **Broadcast**: Durable Object sends WebSocket message to all connected clients
-4. **Auto-eviction**: Cloudflare automatically evicts DO when all connections close
-
-### WebSocket Message Types
-
-WebSocket message types are defined inline in `/server/src/durable-object.ts` and `/server/src/index.ts`.
-
-**Client <- Server**:
-- `connected` - Initial connection confirmation
-- `user-joined` - New user or updated user profile
-- `user-left` - User removed
-
-### JWT Verification Pipeline (`/shared/src/jwt.ts`)
-The shared package exports `decodeAndVerifyJWT` which is used by both client and server to verify cryptographically signed user data from Local First Auth.
-
+**JWT Verification Flow (`decodeAndVerifyJWT`):**
 1. Decode JWT with `jwt-decode`
 2. Extract issuer DID from `iss` claim
 3. Reject if JWT is expired (`exp` claim)
@@ -129,63 +131,78 @@ The shared package exports `decodeAndVerifyJWT` which is used by both client and
 6. Verify Ed25519 signature using `@noble/curves`: `ed25519.verify(signature, message, publicKeyBytes)`
 7. Return typed payload
 
-**Key detail**: Uses @noble/curves library for signature verification. (Cannot use Web Crypto APIs as most mobile browsers don't support Ed25519 yet.)
+**Key detail:** Uses @noble/curves library for signature verification (cannot use Web Crypto APIs as some mobile browsers don't support Ed25519 yet).
 
-**Import**: Both client and server import from `@starter/shared` workspace package.
+**Import:** Both client and server import from `@starter/shared` workspace package.
+
+### Real-time Architecture
+
+The app uses a **single Durable Object instance** (`idFromName: 'default'`) for WebSocket broadcasting:
+
+1. **Client connects**: WebSocket upgrade request → Worker → Durable Object
+2. **User action**: POST endpoint → Worker verifies JWT → Saves to D1 → Notifies DO
+3. **Broadcast**: Durable Object sends WebSocket message to all connected clients
+4. **Auto-eviction**: Cloudflare automatically evicts DO when all connections close
+
+### WebSocket Message Types
+
+Defined inline in `/server/src/durable-object.ts` and `/server/src/index.ts`.
+
+**Client ← Server:**
+| Type | Description |
+|------|-------------|
+| `connected` | Initial connection confirmation |
+| `user-joined` | New user or updated user profile |
+| `user-left` | User removed |
 
 ### Responsive Layout
+
 - **Mobile**: Single column, QR code hidden
 - **Desktop**: Two columns with QR code panel on left
 
-## Building Your App
+---
 
-1. **Add tables** to `/server/src/db/schema.ts` alongside the existing `users` table
-2. **Create models** in `/server/src/db/models/` for CRUD operations
-3. **Add API endpoints** in `/server/src/index.ts` with JWT verification
-4. **Build UI components** in `/client/src/components/`
-5. **Wire up WebSocket events** for real-time updates
-6. **Update manifest** in `/client/public/local-first-auth-manifest.json` if needed
+## API Reference
 
-Use the `/local-first-auth` Claude Code command for guided scaffolding.
+### REST Endpoints
 
-## Deployment with Alchemy
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| `POST` | `/api/add-user` | Add or update user profile | JWT required |
+| `POST` | `/api/add-avatar` | Add or update user avatar | JWT required |
+| `DELETE` | `/api/remove-user` | Remove user | JWT required |
+| `GET` | `/api/users` | Get all users from database | Public |
+| `GET` | `/api` | Health check | Public |
 
-This project uses [Alchemy](https://alchemy.run) for deployment to Cloudflare Workers.
+### WebSocket Endpoint
 
-### Configuration
-- `alchemy.run.ts` - Alchemy configuration file defining the Cloudflare Worker, D1 database, and Durable Object bindings
-- `.alchemy/state.json` - Created after first deployment, tracks infrastructure state
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/ws` | Establish WebSocket connection for real-time updates |
 
-### Deployment Commands
+---
+
+## Database
+
+### Commands
+
+Run from workspace root unless noted:
+
 ```bash
-pnpm run deploy:cloudflare  # Deploy to Cloudflare
-pnpm run destroy:cloudflare # Destroy Alchemy deployment
+pnpm db:generate-migrations  # Generate D1 migration files from schema (from /server/)
+pnpm db:run-migrations       # Run all pending migrations on local D1 database
+pnpm db:push                 # Push schema changes directly without migrations (from /server/)
+pnpm db:studio               # Open Drizzle Studio for database inspection (from /server/)
 ```
 
-No manual migration steps needed - everything is handled by `alchemy.run.ts` configuration.
+### Migration Workflow
 
-## Development Workflow
+1. **Edit schema** in `/server/src/db/schema.ts`
+2. **Generate migration**: `pnpm db:generate-migrations` (uses `drizzle.config.js` to read schema)
+3. **Apply locally**: `pnpm db:run-migrations` (runs `run-dev-migrations.ts`)
+4. **Deploy to production**: `pnpm run deploy:cloudflare` (Alchemy automatically applies migrations via `migrationsDir`)
 
-### Debugging Local First Auth Mini Apps
-The Local First Auth Simulator injects the `window.localFirstAuth` API into a regular browser, allowing you to test your mini app locally without needing the Antler mobile app.
-
-**Note:** This is a development-only tool and should never be used in production.
-
-```typescript
-if (import.meta.env.DEV) {
-  const simulator = await import('local-first-auth-simulator')
-  simulator.enableLocalFirstAuthSimulator()
-}
-```
-
-That's it! The simulator will:
-- Inject `window.localFirstAuth` into your page
-- Load a default test profile (Paul Morphy)
-- Show a floating debug panel
-- Click "Open as X" to open a new tab and simulate multiple users
-- Load a profile from the URL parameter `?localFirstAuthProfile=<id>`
-
-### Database Queries (for admins)
+### Database Queries
 
 Use the Wrangler CLI to run SQL queries against D1 databases.
 
@@ -195,8 +212,6 @@ pnpm wrangler d1 execute meetup-cloudflare-dev-db --local --command "SELECT * FR
 ```
 
 **Production (Remote D1):**
-
-Use the Cloudflare CLI to find the database name and run queries.
 ```bash
 # Find the database name (format: meetup-irl-<stage>-db)
 pnpm wrangler d1 list
@@ -209,66 +224,85 @@ Or log in to the Cloudflare dashboard, go to the D1 database, and run SQL querie
 
 ### Admin Setup
 
-Admin status is stored in the D1 database (`is_admin` column in the `users` table). To make a user an admin, they must first check in to the meetup, then update their status using SQL.
+Admin status is stored in the D1 database (`is_admin` column in the `users` table). To make a user an admin, they must first add their profile details, then update their status using SQL.
 
 **Development (Local D1):**
 ```bash
-# Set user as admin by DID
-pnpm wrangler d1 execute meetup-cloudflare-dev-db --local --command "UPDATE users SET is_admin = 1 WHERE did = 'did:key:z...';"
+pnpm wrangler d1 execute mini-app-starter-dev-db --local --command "UPDATE users SET is_admin = 1 WHERE did = 'did:key:z...';"
 ```
 
 **Production (Remote D1):**
 ```bash
-# Set user as admin by DID
-pnpm wrangler d1 execute meetup-irl-prod-db --remote --command "UPDATE users SET is_admin = 1 WHERE did = 'did:key:z...';"
+pnpm wrangler d1 execute mini-app-starter-prod-db --remote --command "UPDATE users SET is_admin = 1 WHERE did = 'did:key:z...';"
 ```
 
-Or log in to the Cloudflare dashboard, go to the D1 database, and run the SQL query.
+---
 
-```sql
-UPDATE users SET is_admin = 1 WHERE did = 'did:key:z...';
+## Deployment
+
+This project uses [Alchemy](https://alchemy.run) for deployment to Cloudflare Workers.
+
+### Configuration
+
+- `alchemy.run.ts` - Alchemy configuration file defining the Cloudflare Worker, D1 database, and Durable Object bindings
+- `.alchemy/state.json` - Created after first deployment, tracks infrastructure state
+
+### Commands
+
+```bash
+pnpm run deploy:cloudflare  # Deploy to Cloudflare
+pnpm run destroy:cloudflare # Destroy Alchemy deployment
 ```
 
-## Third Party Libraries
+No manual migration steps needed - everything is handled by `alchemy.run.ts` configuration.
 
-### Client
+---
+
+## Reference
+
+### Third Party Libraries
+
+#### Client
+
 - **React** - UI framework
 - **Tailwind CSS** - Utility-first CSS framework
+- **React Router** - Routing for the app
 - **qrcode.react** - QR code generation
-- **local-first-auth** - Authentication library, using the Local First Auth spec
-- **local-first-auth-simulator** - Local First Auth debugging (dev only)
+- **local-first-auth** - Authentication library using the Local First Auth spec
+- **local-first-auth-simulator** - Simulates different test users (dev only)
 - **Vite** - Build tool and dev server
 
-### Server
-- **Hono** - Lightweight web framework for Cloudflare Workers
+#### Server
+
+- **Hono** - Lightweight REST API framework for Cloudflare Workers
 - **Drizzle ORM** - TypeScript ORM for D1 database operations
 - **Drizzle Kit** - Migration generator and database studio
 - **Cloudflare Workers** - Serverless runtime environment
 - **Cloudflare D1** - Serverless SQLite database
 - **Cloudflare Durable Objects** - Stateful WebSocket coordination
 
-### Shared (hoisted to workspace root)
+#### Shared (hoisted to workspace root)
+
 - **@noble/curves** - Ed25519 signature verification
 - **base58-universal** - Base58 encoding/decoding for DIDs
 - **jwt-decode** - JWT decoding
-- **drizzle-orm** - Also hoisted for shared database types
+- **drizzle-orm** - Database ORM
 
-### Development Tools (workspace root)
-- **Alchemy** (0.77.0) - Deployment tool for Cloudflare
-- **concurrently** - Run multiple npm scripts in parallel
-- **tsx** - TypeScript execution for migration scripts
+#### Development Tools
 
-## Troubleshooting
+- **Alchemy** - Infrastructure as Code tool for deploying to Cloudflare
 
-### JWT Verification Failures
+### Troubleshooting
+
+**JWT Verification Failures:**
 - Expired JWT (`exp` claim)
 - Invalid signature
 - Malformed DID (must start with `did:key:z`)
 - Audience claim mismatch (must match production URL)
 
-### Profile Not Loading
-Check if API exists: `console.log(window.localFirstAuth)`
+**Profile Not Loading:**
+- Check if API exists: `console.log(window.localFirstAuth)`
 
-### Build Errors
+**Build Errors:**
 - Run `pnpm install`
 - Check TypeScript errors: `pnpm run build`

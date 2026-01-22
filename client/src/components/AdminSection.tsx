@@ -82,7 +82,7 @@ export function AdminSection({ getProfileJwt, onReset }: AdminSectionProps) {
             </div>
 
             {error && (
-              <div className="p-3 bg-red-100 border border-red-300 rounded text-red-800 text-sm">
+              <div className="p-3 bg-red-100 border border-red-400 rounded text-red-800 text-sm">
                 {error}
               </div>
             )}

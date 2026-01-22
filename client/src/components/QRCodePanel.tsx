@@ -12,8 +12,8 @@ export function QRCodePanel({ url }: QRCodePanelProps) {
   const qrUrl = url || window.location.href;
 
   return (
-    <div className="hidden md:flex flex-col items-center justify-center bg-gradient-to-br from-indigo-100 to-purple-100 p-8">
-      <div className="bg-white p-8 rounded-2xl shadow-xl">
+    <div className="hidden md:flex flex-col items-center justify-center bg-gradient-to-br from-qr-gradient-start to-qr-gradient-end p-8">
+      <div className="bg-card p-8 rounded-2xl shadow-xl">
         <QRCodeSVG
           value={qrUrl}
           size={256}

@@ -7,6 +7,9 @@ import { getPlatformProxy } from 'wrangler'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
+
+// This script is used to run migrations on the local D1 database during development
+// On production, Alchemy will automatically apply migrations during deployment
 async function runMigrations() {
   try {
     console.log('📂 Connecting to local D1 database...')
