@@ -93,30 +93,32 @@ pnpm run build:client     # Build only client package
 
 ---
 
-## Configuring a new project from this template
+## Project Setup (Claude: Follow These Instructions)
 
-- `wrangler.toml` - Wrangler configuration for local development (not used in production)
-- `alchemy.run.ts` - Alchemy configuration file defining the Cloudflare Worker, D1 database, and Durable Object bindings
+**When to run these steps:** When the user asks to "set up", "configure", "initialize", or "rename" this project.
 
-**Important:** When starting a new project from this template, update the following files with your app name:
+**Steps to follow:**
 
-1. **`wrangler.toml`** - Update names for local development:
+1. **Ask the user for their app name**
+   - Suggest using kebab-case (e.g., `shopping-list`, `event-checkin`, `my-app`)
+   - Store this as `{app-name}` for the following steps
 
-```toml
-name = "your-app-name"                    # Worker name
-database_name = "your-app-name-db"        # D1 database name
-script_name = "your-app-name"             # In [[durable_objects.bindings]]
-```
+2. **Update `wrangler.toml`** with the new app name:
+   - `name = "{app-name}-dev"`
+   - `database_name = "{app-name}-dev-db"`
+   - `script_name = "{app-name}-dev"`
 
-These names are used to identify your deployment and name Cloudflare resources (Worker, D1 database, etc.).
+3. **Update `alchemy.run.ts`** line 16:
+   - Change `alchemy('mini-app-starter', {` to `alchemy('{app-name}', {`
 
-2. **`alchemy.run.ts`** - Rename the app for production deployment:
+4. **Update `client/public/local-first-auth-manifest.json`**:
+   - Update `name` field to a human-readable name
+   - Update `description` field to describe the app
+   - Ask user if they want to update the icon
 
-```typescript
-const app = await alchemy('your-app-name', {  // Change 'mini-app-starter' to your app name
-  stateStore: (scope) => new CloudflareStateStore(scope),
-})
-```
+5. **Confirm completion** and remind user to:
+   - Run `pnpm install` if they haven't
+   - Run `pnpm dev:simulator` to start development
 
 ---
 
