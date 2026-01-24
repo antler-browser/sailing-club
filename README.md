@@ -60,6 +60,8 @@ Here are some key points to consider: [[Taken from conversation that created the
 - No activity feed
 - No easter eggs/achievements
 
+The mockup may mock profiles and avatars, for our implementation, we are using the 'local-first-auth' library to handle signup and authentication, so users will have a profile and avatar after they complete the onboarding flow.
+
 Look up examples of other mini apps inside `docs/mini-app-examples.md` to see if you can learn anything from them, bring them into your implementation.
 
 Lastly, I need some admin features to set up scavenger hunt.

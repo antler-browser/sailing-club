@@ -147,22 +147,49 @@ pnpm dev              # Start dev server without simulator
 
 **Note:** The simulator is a development-only tool and should never be used in production.
 
+#### Onboarding for Logged-Out Users
+
+**Auth States:**
+| State | Condition | What to Show |
+|-------|-----------|--------------|
+| Loading | `loading === true` | Loading spinner |
+| Logged Out | `user === null` | Onboarding trigger |
+| Logged In | `user !== null` | User content |
+
+**Pattern:**
+
+```tsx
+import { useLocalFirstAuth } from '../hooks/useLocalFirstAuth'
+
+function MyComponent() {
+  const { user, setIsOnboardingModalOpen, getProfileJwt } = useLocalFirstAuth()
+
+  // For UI that requires login
+  if (!user) {
+    return <button onClick={() => setIsOnboardingModalOpen(true)}>Add a thing</button>
+  }
+
+  // For actions that require auth
+  const handleAction = async () => {
+    const profileJwt = await getProfileJwt()
+    if (!profileJwt) {
+      setIsOnboardingModalOpen(true)
+      return
+    }
+    // Make authenticated API call with profileJwt
+  }
+
+  return <div>Welcome, {user.name}!</div>
+}
+```
+
+**Auth checks:**
+- `!user` - Quick sync check for UI rendering
+- `!profileJwt` - Use when making API calls (async)
+
 #### JWT Verification
 
-We use JWT-based authentication to verify the user's profile details.
-
-**JWT Verification Flow (`decodeAndVerifyJWT`):**
-1. Decode JWT with `jwt-decode`
-2. Extract issuer DID from `iss` claim
-3. Reject if JWT is expired (`exp` claim)
-4. *(Optional)* Audience check (`aud` claim) - Currently commented out for development, should be enabled in production
-5. Parse public key from DID: strip `did:key:z`, decode base58, remove multicodec prefix `[0xed, 0x01]`
-6. Verify Ed25519 signature using `@noble/curves`: `ed25519.verify(signature, message, publicKeyBytes)`
-7. Return typed payload
-
-**Key detail:** Uses @noble/curves library for signature verification (cannot use Web Crypto APIs as some mobile browsers don't support Ed25519 yet).
-
-**Import:** Both client and server import from `@starter/shared` workspace package.
+Server endpoints verify JWTs using `decodeAndVerifyJWT` from `@starter/shared`. The function validates the signature, expiration, and returns the typed payload. See `/shared/src/jwt.ts` for implementation.
 
 ### Real-time Architecture
 
