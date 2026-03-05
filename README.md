@@ -29,8 +29,8 @@ Before designing, ask me questions to clarify what I want to build.
 ```bash
 git clone https://github.com/antler-browser/mini-app-starter.git your-app-name
 cd your-app-name
+pnpm install  # Install dependencies
 pnpm setup-project  # setup your app name inside wrangler.toml, alchemy.run.ts (See docs/project-setup.md)
-pnpm install    # Install dependencies
 ```
 
 This project uses pnpm as the package manager, if you don't have it installed, you can install it with `brew install pnpm`.
