@@ -21,7 +21,7 @@ const app = await alchemy('mini-app-starter', {
  * D1 Database
  * Stores user information
  */
-const database = await D1Database('database', {
+const database = await D1Database(`${app.name}-${app.stage}-db`, {
   name: `${app.name}-${app.stage}-db`,
   migrationsDir: './server/src/db/migrations',
   adopt: true,
@@ -39,9 +39,8 @@ const staticAssets = await Assets({
  * Durable Object Namespace
  * Manages real-time WebSocket connections for broadcasting user updates
  */
-const durableObjectName = 'Broadcaster'
-const durableObject = DurableObjectNamespace<Broadcaster>(durableObjectName, {
-  className: durableObjectName,
+const durableObject = DurableObjectNamespace<Broadcaster>(`${app.name}-${app.stage}-durable-object`, {
+  className: 'Broadcaster',
   sqlite: true,
 })
 
@@ -71,6 +70,6 @@ console.log('✅ Alchemy deployment complete')
 console.log(`📦 App: ${app.name}`)
 console.log(`🌍 Stage: ${app.stage}`)
 console.log(`🗄️  D1 Database: ${database.name}`)
-console.log(`🔄 Durable Object: ${durableObjectName}`)
+console.log(`🔄 Durable Object: ${durableObject.className}`)
 console.log(`⚡ Worker: ${worker.name}`)
 console.log(`🌐 URL: ${worker.url}`)

@@ -61,7 +61,10 @@ This is a pnpm workspace monorepo with three packages:
 - `/docs/` - Documentation
   - `local-first-auth-spec.md` - Local First Auth Specification
   - `mini-app-examples.md` - Reference examples and links to other mini apps
+  - `admin-setup.md` - Admin setup instructions
+  - `port-troubleshooting.md` - Port troubleshooting instructions
 - `/scripts/` - Helper scripts
+  - `setup.ts` - Project setup script (renames template to your app name)
   - `build-client-if-missing.ts` - Builds client if dist doesn't exist (runs before dev via predev hook)
   - `run-dev-migrations.ts` - Database migration script for local development
 - `alchemy.run.ts` - Alchemy deployment configuration for Cloudflare Workers
@@ -95,30 +98,9 @@ pnpm run build:client     # Build only client package
 
 ## Project Setup (Claude: Follow These Instructions)
 
-**When to run these steps:** When the user asks to "set up", "configure", "initialize", or "rename" this project.
+**When to run these steps:** When the user asks to "set up", "initialize", or "rename" this project.
 
-**Steps to follow:**
-
-1. **Ask the user for their app name**
-   - Suggest using kebab-case (e.g., `shopping-list`, `event-checkin`, `my-app`)
-   - Store this as `{app-name}` for the following steps
-
-2. **Update `wrangler.toml`** with the new app name:
-   - `name = "{app-name}-dev"`
-   - `database_name = "{app-name}-dev-db"`
-   - `script_name = "{app-name}-dev"`
-
-3. **Update `alchemy.run.ts`** line 16:
-   - Change `alchemy('mini-app-starter', {` to `alchemy('{app-name}', {`
-
-4. **Update `client/public/local-first-auth-manifest.json`**:
-   - Update `name` field to a human-readable name
-   - Update `description` field to describe the app
-   - Ask user if they want to update the icon
-
-5. **Confirm completion** and remind user to:
-   - Run `pnpm install` if they haven't
-   - Run `pnpm dev:simulator` to start development
+Run: `pnpm setup {app-name}` (defaults to current directory name). See [Project Setup docs](./docs/project-setup.md) for details.
 
 ---
 
@@ -278,20 +260,6 @@ pnpm wrangler d1 execute meetup-irl-prod-db --remote --command "SELECT * FROM us
 
 Or log in to the Cloudflare dashboard, go to the D1 database, and run SQL queries directly.
 
-### Admin Setup
-
-Admin status is stored in the D1 database (`is_admin` column in the `users` table). To make a user an admin, they must first add their profile details, then update their status using SQL.
-
-**Development (Local D1):**
-```bash
-pnpm wrangler d1 execute mini-app-starter-dev-db --local --command "UPDATE users SET is_admin = 1 WHERE did = 'did:key:z...';"
-```
-
-**Production (Remote D1):**
-```bash
-pnpm wrangler d1 execute mini-app-starter-prod-db --remote --command "UPDATE users SET is_admin = 1 WHERE did = 'did:key:z...';"
-```
-
 ---
 
 ## Deployment
@@ -362,3 +330,6 @@ No manual migration steps needed - everything is handled by `alchemy.run.ts` con
 **Build Errors:**
 - Run `pnpm install`
 - Check TypeScript errors: `pnpm run build`
+
+**Port Already in Use (8787):**
+See [Port Troubleshooting](./docs/port-troubleshooting.md)

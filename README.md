@@ -1,8 +1,8 @@
 # Mini App Starter
 
-## Idea behind this starter template
+## Overview
 
-In the future, a lot more of the apps we use will be built by our friends. This repo is a starter template to help you easily build and deploy mini apps for you and your friends.
+This repo is a starter template to help you easily build and self-host your own mini apps for your in-person events, social clubs, game nights, etc.
 
 ### Key Benefits
 - **Signup/Login built-in** - You don't have to write any auth code. 
@@ -29,6 +29,7 @@ Before designing, ask me questions to clarify what I want to build.
 ```bash
 git clone https://github.com/antler-browser/mini-app-starter.git your-app-name
 cd your-app-name
+pnpm setup  # setup your app name inside wrangler.toml, alchemy.run.ts (See docs/project-setup.md)
 pnpm install    # Install dependencies
 ```
 
@@ -69,14 +70,18 @@ Lastly, I need some admin features to set up scavenger hunt.
 Ask me questions if you need to clarify anything.
 ```
 
-### 4. Test your app locally.
+### 4. Run database migrations.
 ```bash
 pnpm db:run-migrations    # Initialize / run migrations on local D1 database
+```
+
+### 5. Test your app locally.
+```bash
 pnpm dev                  # Start development server
 pnpm dev:simulator        # or start development server with a test user account
 ```
 
-### 5. Deploy your app to Cloudflare.
+### 6. Deploy your app to Cloudflare.
 
 We use the Alchemy to easily deploy to Cloudflare. If you don't have it installed, you can install it with `brew install alchemy`.
 
