@@ -4,9 +4,11 @@ interface UseWebSocketsOptions {
   userId: string | undefined
   isAdmin: boolean
   onReset?: () => void
+  onBookingCreated?: (data: any) => void
+  onBookingDeleted?: (data: any) => void
 }
 
-export function useWebSockets({ userId, isAdmin, onReset }: UseWebSocketsOptions) {
+export function useWebSockets({ userId, isAdmin, onReset, onBookingCreated, onBookingDeleted }: UseWebSocketsOptions) {
   const [resetMessage, setResetMessage] = useState<string | null>(null)
   const wsRef = useRef<WebSocket | null>(null)
 
@@ -27,6 +29,10 @@ export function useWebSockets({ userId, isAdmin, onReset }: UseWebSocketsOptions
           if (!isAdmin) {
             onReset?.()
           }
+        } else if (data.type === 'booking-created') {
+          onBookingCreated?.(data.data)
+        } else if (data.type === 'booking-deleted') {
+          onBookingDeleted?.(data.data)
         }
       } catch (err) {
         console.error('WebSocket message error:', err)
@@ -41,7 +47,7 @@ export function useWebSockets({ userId, isAdmin, onReset }: UseWebSocketsOptions
       ws.close()
       wsRef.current = null
     }
-  }, [userId, isAdmin, onReset])
+  }, [userId, isAdmin, onReset, onBookingCreated, onBookingDeleted])
 
   return { resetMessage, setResetMessage }
 }

@@ -1,6 +1,6 @@
 {
-  "name": "Local First Auth Starter",
-  "description": "A starter template for building Local First Auth mini apps",
+  "name": "Sailing Club",
+  "description": "Book sailboats, kayaks, and windsurf equipment at the sailing club",
   "icon": "./icon.webp",
   "type": "app",
   "permissions": [

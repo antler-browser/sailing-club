@@ -35,12 +35,12 @@ export function Avatar({ avatar, name, size = 'lg' }: AvatarProps) {
           <img
             src={avatar}
             alt={name || ''}
-            className={`${classes.container} rounded-full ${size === 'lg' ? 'mx-auto' : ''} shadow-lg ${classes.border} border-white object-cover`}
+            className={`${classes.container} rounded-full ${size === 'lg' ? 'mx-auto' : ''} shadow-lg ${classes.border} border-brass/50 object-cover`}
           />
         </div>
       ) : (
         <div className={wrapperClass}>
-          <div className={`${classes.container} rounded-full ${size === 'lg' ? 'mx-auto' : ''} shadow-lg ${classes.border} border-white bg-gradient-to-br from-purple-400 to-blue-400 flex items-center justify-center ${classes.text} text-white`}>
+          <div className={`${classes.container} rounded-full ${size === 'lg' ? 'mx-auto' : ''} shadow-lg ${classes.border} border-brass/50 bg-gradient-to-br from-navy-light to-navy-mid flex items-center justify-center ${classes.text} text-brass`}>
             {name?.charAt(0).toUpperCase() || ''}
           </div>
         </div>
@@ -48,4 +48,3 @@ export function Avatar({ avatar, name, size = 'lg' }: AvatarProps) {
     </>
   );
 }
-

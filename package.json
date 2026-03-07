@@ -28,7 +28,8 @@
     "build:client": "pnpm --filter=./client build",
     "db:generate-migrations": "pnpm --filter=./server db:generate-migrations",
     "db:run-migrations": "tsx scripts/run-dev-migrations.ts",
-    "setup-project": "tsx scripts/setup.ts"
+    "setup-project": "tsx scripts/setup.ts",
+    "seed:equipment": "tsx scripts/seed-equipment.ts"
   },
   "dependencies": {
     "@noble/curves": "^2.0.1",

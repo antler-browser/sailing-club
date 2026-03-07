@@ -1,0 +1,13 @@
+id,name,type,category,status,sortOrder
+s1,Sea Breeze,Laser,sail,available,1
+s2,Windward,420 Dinghy,sail,available,2
+s3,Storm Chaser,Hobie Cat 16,sail,available,3
+s4,Dolphin,Sunfish,sail,available,4
+s5,Tide Runner,Laser Radial,sail,maintenance,5
+k1,River Runner,Single Kayak,kayak,available,1
+k2,Tandem Explorer,Double Kayak,kayak,available,2
+k3,Paddle Pro,SUP,kayak,available,3
+k4,Wave Rider,SUP,kayak,available,4
+w1,Gust,Beginner Board,wind,available,1
+w2,Typhoon,Advanced Board,wind,available,2
+w3,Zephyr,Intermediate Board,wind,available,3

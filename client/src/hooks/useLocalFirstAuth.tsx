@@ -2,7 +2,6 @@ import { createContext, useContext, useState, useEffect, useCallback, type React
 import { decodeAndVerifyJWT } from '@starter/shared'
 import { useWebSockets } from './useWebSockets'
 
-// TypeScript declarations for Local First Auth API
 declare global {
   interface Window {
     localFirstAuth?: {
@@ -33,11 +32,12 @@ interface AuthContextType {
   loading: boolean
   error: string | null
   isOnboardingModalOpen: boolean
-  resetMessage: string | null
   setIsOnboardingModalOpen: (open: boolean) => void
-  setResetMessage: (message: string | null) => void
   handleOnboardingComplete: () => void
   getProfileJwt: () => Promise<string | undefined>
+  onBookingCreated: ((data: any) => void) | undefined
+  onBookingDeleted: ((data: any) => void) | undefined
+  setBookingCallbacks: (cbs: { onCreated?: (data: any) => void; onDeleted?: (data: any) => void }) => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -47,14 +47,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isOnboardingModalOpen, setIsOnboardingModalOpen] = useState(false)
+  const [bookingCreatedCb, setBookingCreatedCb] = useState<((data: any) => void) | undefined>()
+  const [bookingDeletedCb, setBookingDeletedCb] = useState<((data: any) => void) | undefined>()
 
-  // WebSocket connection for real-time updates
   const handleReset = useCallback(() => setUser(null), [])
-  const { resetMessage, setResetMessage } = useWebSockets({
+
+  const handleBookingCreated = useCallback((data: any) => {
+    bookingCreatedCb?.(data)
+  }, [bookingCreatedCb])
+
+  const handleBookingDeleted = useCallback((data: any) => {
+    bookingDeletedCb?.(data)
+  }, [bookingDeletedCb])
+
+  useWebSockets({
     userId: user?.did,
     isAdmin: user?.isAdmin ?? false,
     onReset: handleReset,
+    onBookingCreated: handleBookingCreated,
+    onBookingDeleted: handleBookingDeleted,
   })
+
+  const setBookingCallbacks = useCallback((cbs: { onCreated?: (data: any) => void; onDeleted?: (data: any) => void }) => {
+    setBookingCreatedCb(() => cbs.onCreated)
+    setBookingDeletedCb(() => cbs.onDeleted)
+  }, [])
 
   const getProfileJwt = async (): Promise<string | undefined> => {
     if (!window.localFirstAuth) return undefined
@@ -95,13 +112,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return
       }
 
-      // Get profile details JWT
       const profileJwt = await window.localFirstAuth.getProfileDetails()
-
-      // Add user to database and get user with isAdmin
       const user = await addUserToDatabase(profileJwt)
       setUser(prev => prev ? { ...prev, ...user } : user)
-
       setLoading(false)
     } catch (err) {
       console.error('Error loading profile:', err)
@@ -119,7 +132,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       await addAvatarToDatabase(avatarJWT)
 
-      // Decode avatar JWT and update user
       const avatarPayload = await decodeAndVerifyJWT(avatarJWT)
       if (avatarPayload?.data) {
         const { avatar } = avatarPayload.data as { avatar: string }
@@ -130,14 +142,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  // Handler for when onboarding completes - now window.localFirstAuth is available
   const handleOnboardingComplete = useCallback(() => {
     setIsOnboardingModalOpen(false)
     loadUser()
     loadAvatar()
   }, [loadUser, loadAvatar])
 
-  // Initial load effect
   useEffect(() => {
     if (window.localFirstAuth) {
       loadUser()
@@ -152,11 +162,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loading,
     error,
     isOnboardingModalOpen,
-    resetMessage,
     setIsOnboardingModalOpen,
-    setResetMessage,
     handleOnboardingComplete,
     getProfileJwt,
+    onBookingCreated: bookingCreatedCb,
+    onBookingDeleted: bookingDeletedCb,
+    setBookingCallbacks,
   }
 
   return (

@@ -1,40 +1,68 @@
 @import "tailwindcss";
 
-/* =============================================================================
-   Theme Configuration (Tailwind v4 CSS-first approach)
-   ============================================================================= */
-
 @theme {
-  /* Brand colors */
-  --color-primary: #403B51;
-  --color-primary-hover: #322d40;
+  --color-navy: #0A1628;
+  --color-navy-mid: #12243D;
+  --color-navy-light: #1A3355;
+  --color-cream: #F5F0E6;
+  --color-brass: #C4973B;
+  --color-brass-light: #D4AD5A;
+  --color-green: #2D8B5F;
+  --color-red: #A0413A;
+  --color-text-secondary: #8B9BB8;
+  --color-text-dim: #5A6A85;
 
-  /* Surface colors */
-  --color-card: white;
-  --color-background: white;
+  --color-card: #12243D;
+  --color-background: #0A1628;
 
-  /* Gradient colors for page background */
-  --color-gradient-start: #faf5ff; /* purple-50 */
-  --color-gradient-end: #eff6ff;   /* blue-50 */
+  --color-qr-gradient-start: #12243D;
+  --color-qr-gradient-end: #1A3355;
 
-  /* QR panel gradient */
-  --color-qr-gradient-start: #e0e7ff; /* indigo-100 */
-  --color-qr-gradient-end: #f3e8ff;   /* purple-100 */
+  --font-display: 'DM Serif Display', serif;
+  --font-body: 'DM Sans', sans-serif;
 }
 
-/* =============================================================================
-   Component Patterns
-   ============================================================================= */
+body {
+  font-family: var(--font-body);
+  background-color: var(--color-navy);
+  color: var(--color-cream);
+  -webkit-font-smoothing: antialiased;
+}
 
 @layer components {
-  /* Primary button - brand color with hover effects */
   .btn-primary {
-    @apply bg-primary text-white rounded-full shadow-lg
-           hover:bg-primary-hover transition-all hover:scale-105 font-semibold;
+    @apply bg-brass text-navy rounded-full shadow-lg
+           hover:bg-brass-light transition-all hover:scale-105 font-semibold;
   }
 
-  /* Card container */
   .card {
-    @apply bg-card rounded-lg shadow-lg;
+    @apply bg-navy-mid rounded-xl border border-navy-light/50;
   }
+
+  .rope-divider {
+    height: 2px;
+    background: repeating-linear-gradient(
+      90deg,
+      var(--color-brass) 0px,
+      var(--color-brass) 8px,
+      transparent 8px,
+      transparent 14px
+    );
+    opacity: 0.4;
+  }
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fadeUp 0.35s ease-out both;
 }
