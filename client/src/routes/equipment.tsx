@@ -86,6 +86,7 @@ export function EquipmentDetail() {
           date: selectedDay,
           startSlot: selectedStart,
           endSlot: selectedEnd,
+          timezoneOffset: new Date().getTimezoneOffset(),
         }),
       })
 

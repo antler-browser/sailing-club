@@ -330,7 +330,7 @@ app.get('/api/bookings/mine', async (c) => {
 app.post('/api/bookings', async (c) => {
   try {
     const body = await c.req.json()
-    const { profileJwt, equipmentId, date, startSlot, endSlot } = body
+    const { profileJwt, equipmentId, date, startSlot, endSlot, timezoneOffset } = body
 
     if (!profileJwt) {
       return c.json({ error: 'Missing profileJwt' }, 400)
@@ -352,7 +352,7 @@ app.post('/api/bookings', async (c) => {
       return c.json({ error: 'Missing equipmentId or date' }, 400)
     }
 
-    if (isPastSlot(date, startSlot)) {
+    if (isPastSlot(date, startSlot, timezoneOffset)) {
       return c.json({ error: 'Cannot book a time in the past' }, 400)
     }
 
