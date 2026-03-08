@@ -11,7 +11,7 @@ const csvPath = resolve(__dirname, 'equipment.csv')
 const csv = readFileSync(csvPath, 'utf-8')
 
 const lines = csv.trim().split('\n').slice(1) // skip header
-const dbName = 'sailing-club-dev-db'
+const dbName = isRemote ? 'sailing-club-dmathewwws-db' : 'sailing-club-dev-db'
 const flag = isRemote ? '--remote' : '--local'
 
 for (const line of lines) {

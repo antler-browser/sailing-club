@@ -31,7 +31,13 @@ This project uses pnpm as the package manager. If you don't have it installed: `
 pnpm db:run-migrations
 ```
 
-### 3. Start the dev server
+### 3. Seed equipment data
+
+```bash
+pnpm seed:equipment
+```
+
+### 4. Start the dev server
 
 ```bash
 pnpm run dev              # Start dev server
@@ -53,7 +59,7 @@ This project uses [Alchemy](https://alchemy.run) to deploy to Cloudflare Workers
 Configure a Cloudflare API token:
 
 ```bash
-alchemy configure
+pnpm alchemy configure
 ```
 
 Copy `.env.example` to `.env` and update `ALCHEMY_STATE_TOKEN`.
@@ -62,6 +68,12 @@ Deploy:
 
 ```bash
 pnpm run deploy:cloudflare
+```
+
+Seed equipment data to production:
+
+```bash
+pnpm seed:equipment --remote
 ```
 
 ## Documentation
