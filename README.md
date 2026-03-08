@@ -4,6 +4,8 @@
 
 An equipment booking app for sailing clubs. Members can browse and book sailboats, kayaks, SUPs, and windsurf equipment in 30-minute time slots.
 
+This project is forked from [mini-app-starter](https://github.com/antler-browser/mini-app-starter).
+
 ### Features
 
 - **Equipment categories** — Browse gear organized by Sailboats, Kayaks & SUPs, and Windsurf
@@ -39,6 +41,7 @@ pnpm run dev:simulator    # Start dev server with a test user account
 ## Project Structure
 
 This is a monorepo with three packages:
+
 - `client/` — React frontend
 - `server/` — Cloudflare Workers, D1 (SQLite), Durable Objects (WebSocket)
 - `shared/` — Shared utilities (JWT verification, time slot constants)
@@ -48,6 +51,7 @@ This is a monorepo with three packages:
 This project uses [Alchemy](https://alchemy.run) to deploy to Cloudflare Workers.
 
 Configure a Cloudflare API token:
+
 ```bash
 alchemy configure
 ```
@@ -55,6 +59,7 @@ alchemy configure
 Copy `.env.example` to `.env` and update `ALCHEMY_STATE_TOKEN`.
 
 Deploy:
+
 ```bash
 pnpm run deploy:cloudflare
 ```
