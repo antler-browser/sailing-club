@@ -76,5 +76,3 @@ writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n')
 console.log(manifestChanged ? `✅ local-first-auth-manifest.json updated` : `⏭️  local-first-auth-manifest.json (no changes needed)`)
 
 console.log(`\n🎉 Setup complete! Your app is now "${appName}".`)
-console.log(`\nNext steps:`)
-console.log(`  pnpm install          # Install dependencies`)
