@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react'
 import { decodeAndVerifyJWT } from '@starter/shared'
 import { useWebSockets } from './useWebSockets'
+import { injectLocalFirstAuthAPI, hasProfile as hasStoredProfile } from 'local-first-auth'
 
 declare global {
   interface Window {
@@ -149,6 +150,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [loadUser, loadAvatar])
 
   useEffect(() => {
+    // Restore API if profile exists in localStorage but window.localFirstAuth is not yet set
+    if (!window.localFirstAuth && hasStoredProfile()) {
+      injectLocalFirstAuthAPI()
+    }
+
     if (window.localFirstAuth) {
       loadUser()
       loadAvatar()
