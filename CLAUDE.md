@@ -1,10 +1,10 @@
-# CLAUDE.md for Mini App Starter
+# CLAUDE.md for Sailing Club
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
 
-A starter template for building mini apps for you and your friends. Uses Local First Auth spec for user signup and authentication, SQLite database, WebSocket for real-time updates, REST API for backend endpoints.
+A sailing club equipment booking app. Members can browse and book sailboats, kayaks, SUPs, and windsurf gear in 30-minute time slots (9am–5pm). Built on the mini-app-starter template with Local First Auth for signup/authentication, SQLite database, WebSocket for real-time updates, and REST API for backend endpoints.
 
 ### Project Structure
 
@@ -14,13 +14,21 @@ This is a pnpm workspace monorepo with three packages:
 |---------|-------------|
 | `client/` | React frontend |
 | `server/` | Cloudflare Workers, D1 (SQLite), Durable Objects (WebSocket) |
-| `shared/` | Shared utilities (JWT verification) |
+| `shared/` | Shared utilities (JWT verification, time slot constants) |
 
 ### Key Files
 
 #### Client (`/client/`)
 
 - `/client/src/components/` - React components
+  - `BookingCard.tsx` - Card showing individual booking details
+  - `CategoryCard.tsx` - Equipment category card (Sailboats, Kayaks & SUPs, Windsurf)
+  - `ConfirmationOverlay.tsx` - Confirmation dialog for bookings
+  - `EquipmentListItem.tsx` - Equipment list item in category view
+  - `ScheduleTimeline.tsx` - Timeline view of bookings for a date
+  - `SlotPicker.tsx` - Time slot selection interface
+  - `StatusBadge.tsx` - Equipment status badge (available/maintenance)
+  - `WeekPicker.tsx` - Week navigation and day selection
   - `QRCodePanel.tsx` - QR code for app (hidden on mobile, visible on desktop)
   - `Avatar.tsx` - User avatar or placeholder
   - `AdminSection.tsx` - Admin-only controls for resetting the event
@@ -30,7 +38,9 @@ This is a pnpm workspace monorepo with three packages:
   - `useWebSockets.ts` - WebSocket connection hook for real-time updates
 - `/client/src/routes/` - Route components
   - `index.tsx` - React Router root route
-  - `home.tsx` - Home page
+  - `home.tsx` - Home page with greeting, bookings, schedule, and categories
+  - `category.tsx` - Equipment category listing page (sail, kayak, wind)
+  - `equipment.tsx` - Equipment detail page with date/time picker and booking
   - `not-found.tsx` - 404 page
 - `/client/src/app.tsx` - Main component with React Router and Local First Auth integration
 - `/client/src/main.tsx` - Entry point (initializes Local First Auth Simulator when `VITE_ENABLE_LOCAL_FIRST_AUTH_SIMULATOR=true`)
@@ -44,9 +54,11 @@ This is a pnpm workspace monorepo with three packages:
 - `/server/src/index.ts` - Cloudflare Workers entry point with Hono router, API endpoints, and WebSocket handling
 - `/server/src/durable-object.ts` - Durable Object class for real-time WebSocket connections (WebSocket message types defined inline)
 - `/server/src/db/client.ts` - Database client factory for Cloudflare D1
-- `/server/src/db/schema.ts` - Database schema (used by Drizzle Kit to generate migrations)
+- `/server/src/db/schema.ts` - Database schema: `users`, `equipment`, `bookings` tables (used by Drizzle Kit to generate migrations)
 - `/server/src/db/models/index.ts` - Export file for all models
 - `/server/src/db/models/users.ts` - User database model
+- `/server/src/db/models/equipment.ts` - Equipment database model (`getAllEquipment`, `getEquipmentById`)
+- `/server/src/db/models/bookings.ts` - Bookings database model (`getBookingsByDate`, `getBookingsByWeek`, `getBookingsByUser`, `checkOverlap`, `createBooking`, `deleteBooking`)
 - `/server/src/db/migrations/` - D1 SQL migration files (auto-generated)
 - `/server/drizzle.config.js` - Drizzle Kit configuration for migrations
 - `/server/src/types.ts` - Type definitions for Cloudflare Workers environment bindings
@@ -55,6 +67,7 @@ This is a pnpm workspace monorepo with three packages:
 
 - `/shared/src/index.ts` - Main export file for shared utilities
 - `/shared/src/jwt.ts` - JWT decoding and verification utilities (`decodeAndVerifyJWT`, `decodeJWT`)
+- `/shared/src/slots.ts` - Time slot constants and utilities (`TOTAL_SLOTS=48`, `BOOKING_START_SLOT=18` for 9am, `BOOKING_END_SLOT=34` for 5pm, `isPastSlot`)
 
 #### Root
 
@@ -96,19 +109,11 @@ pnpm run build:client     # Build only client package
 
 ---
 
-## Project Setup (Claude: Follow These Instructions)
-
-**When to run these steps:** When the user asks to "set up", "initialize", or "rename" this project.
-
-Run: `pnpm setup-project {app-name}` (defaults to current directory name). See [Project Setup docs](./docs/project-setup.md) for details.
-
----
-
 ## Architecture
 
 ### Authentication
 
-We use the library `local-first-auth` to easily add auth and a simple onboarding flow to the mini app. It uses the Local First Auth spec to simplify the signing up and onboarding process. 
+We use the library `local-first-auth` to easily add auth and a simple onboarding flow to the mini app. It uses the Local First Auth spec to simplify the signing up and onboarding process.
 
 **How it works:**
 1. User creates a one-time account (no passwords, no email, no signup)
@@ -189,9 +194,12 @@ Defined inline in `/server/src/durable-object.ts` and `/server/src/index.ts`.
 **Client ← Server:**
 | Type | Description |
 |------|-------------|
-| `connected` | Initial connection confirmation |
+| `connected` | Initial connection confirmation with timestamp and connection count |
 | `user-joined` | New user or updated user profile |
 | `user-left` | User removed |
+| `booking-created` | New booking created (includes user name/avatar) |
+| `booking-deleted` | Booking cancelled (includes bookingId, equipmentId, date) |
+| `reset` | Event reset (contains reset message) |
 
 ### Responsive Layout
 
@@ -210,6 +218,13 @@ Defined inline in `/server/src/durable-object.ts` and `/server/src/index.ts`.
 | `POST` | `/api/add-avatar` | Add or update user avatar | JWT required |
 | `DELETE` | `/api/remove-user` | Remove user | JWT required |
 | `GET` | `/api/users` | Get all users from database | Public |
+| `GET` | `/api/equipment` | Get all equipment | Public |
+| `GET` | `/api/bookings?date=` | Get bookings for a specific date | Public |
+| `GET` | `/api/bookings/week?start=` | Get bookings for a 7-day range | Public |
+| `GET` | `/api/bookings/mine` | Get current user's bookings | Bearer token |
+| `POST` | `/api/bookings` | Create a booking (validates slots, checks overlaps) | JWT required |
+| `DELETE` | `/api/bookings/:id` | Cancel a booking (owner or admin) | JWT required |
+| `POST` | `/api/reset` | Reset event, remove non-admin users | Admin only |
 | `GET` | `/api` | Health check | Public |
 
 ### WebSocket Endpoint
@@ -221,6 +236,13 @@ Defined inline in `/server/src/durable-object.ts` and `/server/src/index.ts`.
 ---
 
 ## Database
+
+### Schema
+
+Three tables defined in `/server/src/db/schema.ts`:
+- **users** - `did` (PK), `name`, `avatar`, `socials`, `isAdmin`, `createdAt`
+- **equipment** - `id` (PK), `name`, `type`, `category` (sail/kayak/wind), `status` (available/maintenance), `sortOrder`
+- **bookings** - `id` (auto-increment PK), `equipmentId`, `userDid`, `date` (ISO), `startSlot` (0-47), `endSlot` (0-47), `createdAt`
 
 ### Commands
 
@@ -246,16 +268,16 @@ Use the Wrangler CLI to run SQL queries against D1 databases.
 
 **Development (Local D1):**
 ```bash
-pnpm wrangler d1 execute meetup-cloudflare-dev-db --local --command "SELECT * FROM users;"
+pnpm wrangler d1 execute sailing-club-dev-db --local --command "SELECT * FROM users;"
 ```
 
 **Production (Remote D1):**
 ```bash
-# Find the database name (format: meetup-irl-<stage>-db)
+# Find the database name
 pnpm wrangler d1 list
 
 # Run a query
-pnpm wrangler d1 execute meetup-irl-prod-db --remote --command "SELECT * FROM users;"
+pnpm wrangler d1 execute sailing-club-prod-db --remote --command "SELECT * FROM users;"
 ```
 
 Or log in to the Cloudflare dashboard, go to the D1 database, and run SQL queries directly.
