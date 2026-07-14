@@ -41,7 +41,10 @@ This is a pnpm workspace monorepo with three packages:
   - `home.tsx` - Home page with greeting, bookings, schedule, and categories
   - `category.tsx` - Equipment category listing page (sail, kayak, wind)
   - `equipment.tsx` - Equipment detail page with date/time picker and booking
+  - `profile.tsx` - Profile backup/restore page (export or import a Local First Auth profile)
   - `not-found.tsx` - 404 page
+- `/client/src/lib/` - Client utilities
+  - `authStyles.ts` - Shared `customStyles` theme for the local-first-auth and import/export components
 - `/client/src/app.tsx` - Main component with React Router and Local First Auth integration
 - `/client/src/main.tsx` - Entry point (initializes Local First Auth Simulator when `VITE_ENABLE_LOCAL_FIRST_AUTH_SIMULATOR=true`)
 - `/client/public/` - Public files
@@ -122,6 +125,23 @@ We use the library `local-first-auth` to easily add auth and a simple onboarding
 4. Mini app calls `getProfileDetails()` to access the user's profile details
 
 See `/docs/local-first-auth-spec.md` for the full specification.
+
+#### Per-Origin DIDs (v3+)
+
+Since `local-first-auth` v3, the stored keypair is a **root key that never signs JWTs directly**. For each origin a distinct keypair is derived (HKDF-SHA256), so the JWT `iss` — and therefore the `did` we store in the `users` table — is a **per-origin (pairwise) DID**. It's stable for our origin and uncorrelatable across sites.
+
+Practical consequences:
+- The same profile yields a **different DID on each origin** (scheme, host, and port all count), so `localhost:5173` and production produce different DIDs. Admin must be granted per environment — see `/docs/admin-setup.md`.
+- The DID inside an exported profile backup is the **root** DID, which is *not* the DID in the `users` table. Never use it for admin SQL.
+- An imported profile **preserves the DID** — no new keypair is minted — so a user who restores a backup keeps their existing bookings.
+
+#### Profile Import / Export
+
+`local-first-auth-import-export` shares the same LocalStorage keys (`local-first-auth:profile`, `local-first-auth:privateKey`) as `local-first-auth`, so the two are interoperable. The UI lives at `/profile` (`<ImportExport />`), and the onboarding modal offers "Already have a profile? Import it" (`<ImportProfile />`).
+
+After an import, call `handleProfileImported()` from `useLocalFirstAuth()` — it clears the current user and re-runs `loadUser()`/`loadAvatar()` so the imported DID is registered with the server.
+
+**Security:** an exported file contains the user's private key in plain text — it *is* their identity. It must never be uploaded, logged, or sent over the network.
 
 #### Local First Auth Simulator
 
@@ -315,6 +335,7 @@ No manual migration steps needed - everything is handled by `alchemy.run.ts` con
 - **React Router** - Routing for the app
 - **qrcode.react** - QR code generation
 - **local-first-auth** - Authentication library using the Local First Auth spec
+- **local-first-auth-import-export** - Export a profile (DID + keypair) as a portable JSON file, or import one to restore an existing identity
 - **local-first-auth-simulator** - Simulates different test users (dev only)
 - **Vite** - Build tool and dev server
 

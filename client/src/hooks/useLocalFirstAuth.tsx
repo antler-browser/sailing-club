@@ -1,22 +1,11 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react'
 import { decodeAndVerifyJWT } from '@starter/shared'
 import { useWebSockets } from './useWebSockets'
-import { injectLocalFirstAuthAPI, hasProfile as hasStoredProfile } from 'local-first-auth'
+import { injectLocalFirstAuthAPI, hasProfile as hasStoredProfile, type LocalFirstAuth } from 'local-first-auth'
 
 declare global {
   interface Window {
-    localFirstAuth?: {
-      getProfileDetails(): Promise<string>;
-      getAvatar(): Promise<string | null>;
-      getAppDetails(): {
-        name: string;
-        version: string;
-        platform: 'ios' | 'android' | 'browser';
-        supportedPermissions: string[];
-      };
-      requestPermission(permission: string): Promise<boolean>;
-      close(): void;
-    };
+    localFirstAuth?: LocalFirstAuth;
   }
 }
 
@@ -35,6 +24,7 @@ interface AuthContextType {
   isOnboardingModalOpen: boolean
   setIsOnboardingModalOpen: (open: boolean) => void
   handleOnboardingComplete: () => void
+  handleProfileImported: () => void
   getProfileJwt: () => Promise<string | undefined>
   onBookingCreated: ((data: any) => void) | undefined
   onBookingDeleted: ((data: any) => void) | undefined
@@ -149,6 +139,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loadAvatar()
   }, [loadUser, loadAvatar])
 
+  // An imported profile can be a *different* identity than the one currently in
+  // state. Clear first so loadUser() doesn't merge the previous user's fields
+  // (e.g. their avatar) onto the newly imported DID.
+  const handleProfileImported = useCallback(() => {
+    setIsOnboardingModalOpen(false)
+    setUser(null)
+    setLoading(true)
+    loadUser()
+    loadAvatar()
+  }, [loadUser, loadAvatar])
+
   useEffect(() => {
     // Restore API if profile exists in localStorage but window.localFirstAuth is not yet set
     if (!window.localFirstAuth && hasStoredProfile()) {
@@ -170,6 +171,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isOnboardingModalOpen,
     setIsOnboardingModalOpen,
     handleOnboardingComplete,
+    handleProfileImported,
     getProfileJwt,
     onBookingCreated: bookingCreatedCb,
     onBookingDeleted: bookingDeletedCb,

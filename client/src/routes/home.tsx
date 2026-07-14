@@ -60,13 +60,24 @@ export function Home() {
   return (
     <div className="space-y-6 animate-fade-up">
       {/* Greeting */}
-      <div>
-        <h1 className="text-2xl font-display text-cream">
-          Hey, {user ? user.name : ''}
-        </h1>
-        <p className="text-text-secondary text-sm mt-1">
-          {user ? 'Ready to hit the water?' : 'Sign in to book equipment'}
-        </p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-display text-cream">
+            Hey, {user ? user.name : ''}
+          </h1>
+          <p className="text-text-secondary text-sm mt-1">
+            {user ? 'Ready to hit the water?' : 'Sign in to book equipment'}
+          </p>
+        </div>
+        <button
+          onClick={() => navigate('/profile')}
+          title="Profile backup & restore"
+          className="shrink-0 w-9 h-9 rounded-lg bg-navy-mid border border-navy-light/50 flex items-center justify-center text-text-secondary hover:text-cream transition"
+        >
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+          </svg>
+        </button>
       </div>
 
       {/* Your Bookings */}
